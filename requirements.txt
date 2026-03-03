@@ -1,0 +1,30 @@
+# =============================================================================
+# LegalLease Live Agent - Backend Requirements
+# =============================================================================
+
+# FastAPI & Server
+fastapi
+uvicorn[standard]
+gunicorn
+pydantic[email]
+pydantic-settings
+websockets
+
+# Firebase (Auth + Firestore)
+firebase-admin
+
+# Auth & Security
+python-jose[cryptography]
+python-multipart
+
+# Google AI - ADK & Gemini
+google-adk
+google-genai
+
+# Utilities
+python-dotenv
+httpx
+
+# Testing
+pytest
+pytest-asyncio
