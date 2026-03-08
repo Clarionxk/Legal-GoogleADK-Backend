@@ -119,6 +119,67 @@ The frontend will be running at `http://localhost:3000`.
 6. Once confirmed, it generates the contract and displays it in the preview panel
 7. Click **Download** to save as PDF
 
+## 🧪 Reproducible Testing (For Judges)
+
+Once both backend and frontend are running, follow these steps to verify the project works:
+
+### Step 1: Verify Backend Health
+
+```bash
+curl http://localhost:8000/health
+```
+
+**Expected:** `{"status":"healthy","app":"LegalLease Live Agent","version":"2.0.0","environment":"development"}`
+
+### Step 2: Test Contract Creation (Voice Agent)
+
+1. Open [http://localhost:3000/create](http://localhost:3000/create)
+2. Click the **microphone button** to start a voice session
+3. **Allow microphone access** when prompted by your browser
+4. Speak to the agent. Example prompt:
+   > _"I need a sales agreement under California law. The seller is John Smith, the buyer is Sarah Johnson. It's for a 2020 Honda Civic, $15,000 paid in full on delivery, effective March 15th 2026."_
+5. The agent will confirm details and ask for approval
+6. Say **"Yes, that looks correct"** to confirm
+7. **Expected:** A full contract appears in the right panel within 10-15 seconds
+8. The contract auto-saves to Cloud Firestore
+
+### Step 3: Test Contract Analysis (Vision)
+
+1. Navigate to [http://localhost:3000/analyze](http://localhost:3000/analyze)
+2. Upload any **PDF or image** of a contract (you can screenshot the contract from Step 2, or use any contract PDF)
+3. Optionally type context like: _"I'm the buyer — what should I watch out for?"_
+4. Click **"🔍 Analyze Contract"**
+5. **Expected:** An 8-section structured analysis appears within 15-20 seconds, covering:
+   - Contract overview
+   - Key terms & definitions
+   - Obligations of each party
+   - Important clauses
+   - Potential risks & red flags
+   - Missing elements
+   - Plain language summary
+   - Recommendations
+
+### Step 4: Test API Endpoints Directly (Optional)
+
+```bash
+# List all saved contracts
+curl http://localhost:8000/api/contracts
+
+# Upload a contract for analysis via CLI
+curl -X POST http://localhost:8000/api/analyze \
+  -F "file=@/path/to/contract.pdf" \
+  -F "context=I am the tenant"
+```
+
+### Live Deployment
+
+The backend is also deployed on Google Cloud Run:
+
+- **Health:** [https://legallease-backend-1020043848119.us-central1.run.app/health](https://legallease-backend-1020043848119.us-central1.run.app/health)
+- **API Docs:** [https://legallease-backend-1020043848119.us-central1.run.app/docs](https://legallease-backend-1020043848119.us-central1.run.app/docs)
+
+---
+
 ## ☁️ Deploy to Google Cloud Run
 
 ### Prerequisites
