@@ -95,6 +95,7 @@ bash start-minimal.sh
 The backend will be running at `http://localhost:8000`.
 
 ### 3. Frontend Setup
+Download The Frontend Repo at [Legal-GoogleADK-Frontend](https://github.com/Clarionxk/Legal-GoogleADK-Frontend)
 
 ```bash
 cd frontend
@@ -185,11 +186,6 @@ legallease-live-agent/
 └── README.md
 ```
 
-## 🏆 Hackathon Submission
-
-- **Category:** Live Agents 🗣️
-- **Mandatory Tech:** ✅ Gemini Live API + ADK + Google Cloud Run
-- **Google Cloud Service:** ✅ Cloud Run + Firebase
 
 ## 📜 Available Contract Types
 
