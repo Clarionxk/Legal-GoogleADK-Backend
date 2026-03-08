@@ -80,11 +80,12 @@ async def root():
 
 
 # ─── Routers ─────────────────────────────────────────────────────────────────
-from app.api.routes import auth, contracts
+from app.api.routes import auth, contracts, analyze
 from app.api.routes.live_agent import router as live_agent_router
 
 app.include_router(auth.router, prefix=settings.API_V1_PREFIX)
 app.include_router(contracts.router, prefix=settings.API_V1_PREFIX)
+app.include_router(analyze.router, prefix=settings.API_V1_PREFIX)
 app.include_router(live_agent_router)  # WebSocket at /ws/live-agent/{session_id}
 
 

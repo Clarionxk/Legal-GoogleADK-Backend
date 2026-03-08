@@ -1,0 +1,12 @@
+# Cloud Build ignore file — overrides .gitignore for deployment
+# We NEED the firebase service account key in the container
+venv/
+__pycache__/
+*.pyc
+.DS_Store
+*.egg-info/
+.env
+.env.*
+*.md
+.git/
+.gitignore

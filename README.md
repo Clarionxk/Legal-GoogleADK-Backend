@@ -1,61 +1,90 @@
-# ⚖️ LegalLease — Live AI Legal Partner
+# ⚖️ LegalLease — AI Legal Partner
 
-> **Gemini Live Agent Challenge** — Redefining legal contract creation through real-time voice conversation.
+> **Create professional contracts through natural voice conversation, or upload existing contracts for instant AI-powered analysis.**
 
-LegalLease is a **voice-to-voice AI legal assistant** that helps users create professionally drafted legal contracts through natural conversation. Instead of filling out forms or reading legal jargon, users simply _talk_ to LegalLease — and it listens, asks clarifying questions, and generates comprehensive contracts in real-time.
+Built for the [Gemini Live Agent Challenge](https://geminiliveagentchallenge.devpost.com/) — Category: **Live Agents 🗣️**
 
-[![Built with Gemini](https://img.shields.io/badge/Built%20with-Gemini%20Live%20API-blue?style=for-the-badge&logo=google)](https://ai.google.dev/)
-[![Hackathon](https://img.shields.io/badge/Hackathon-Gemini%20Live%20Agent%20Challenge-gold?style=for-the-badge)](https://geminiliveagentchallenge.devpost.com/)
+![Architecture Diagram](./architecture-diagram.png)
 
 ---
 
 ## 🎯 Problem
 
-Creating legal contracts is **expensive, intimidating, and inaccessible** for most people:
-
-- Lawyers charge $200-500/hr for basic contract drafting
-- Legal templates are confusing and filled with jargon
-- Online form-based generators feel impersonal and miss nuance
-- Most people don't know what clauses they need
+Creating legal contracts is expensive, time-consuming, and inaccessible for most people. Small businesses, freelancers, and individuals often can't afford lawyers for routine agreements. Similarly, understanding the fine print in existing contracts requires legal expertise that most people don't have.
 
 ## 💡 Solution
 
-LegalLease uses **Gemini's Live API** to create a conversational legal partner that:
+**LegalLease** is a multimodal AI legal partner that:
 
-- 🗣️ **Talks naturally** — speak your needs, get spoken responses back
-- 📋 **Covers 40+ contract types** across 5 jurisdictions
-- 📝 **Generates comprehensive contracts** with 16+ standard legal sections
-- 🔄 **Real-time** — bidirectional audio streaming, not turn-based chat
-- 📄 **Instant download** — save your contract as PDF immediately
+1. **🎤 Creates Contracts** — Talk naturally to the AI assistant using your voice. Describe what you need, answer clarifying questions, and get a comprehensive, professionally-formatted contract generated in seconds.
+
+2. **📄 Analyzes Contracts** — Upload a PDF or photo of any existing contract. The AI provides a detailed analysis covering risks, obligations, missing clauses, and a plain-language summary.
+
+---
+
+## ✨ Features
+
+### Live Voice Agent (`/create`)
+
+- **Real-time voice-to-voice** conversation using Gemini Live API
+- **Natural interruption handling** — speak naturally, interrupt anytime
+- **Supports 50+ contract types** across 5 jurisdictions
+- **Auto-generates** comprehensive, legally-formatted contracts
+- **Auto-saves** to Cloud Firestore
+
+### Contract Analyzer (`/analyze`)
+
+- **Upload PDF or image** (drag & drop or click to browse)
+- **8-section structured analysis**: overview, key terms, obligations, important clauses, risks/red flags, missing elements, plain language summary, and recommendations
+- **Gemini Vision** powered — reads and understands document images
+- **Downloadable report** for offline reference
+- **Optional context** — ask specific questions like "I'm the tenant, what should I watch out for?"
+
+---
 
 ## 🏗️ Architecture
 
 ```
-┌─────────────────────┐                    ┌──────────────────────────┐
-│   Next.js Frontend  │                    │  Google Cloud Run        │
-│                     │                    │                          │
-│  AudioWorklet       │◄── WebSocket ────►│  FastAPI + ADK Runner    │
-│  (PCM 16kHz capture)│    (bidirectional) │         │                │
-│                     │                    │         ▼                │
-│  Web Audio API      │                    │  Gemini Live API         │
-│  (24kHz playback)   │                    │  (2.5 Flash Native Audio)│
-│                     │                    │                          │
-│  Contract Preview   │                    │  Firebase (Auth/Data)    │
-│  + PDF Download     │                    │                          │
-└─────────────────────┘                    └──────────────────────────┘
+┌──────────────────────────────────────────────────┐
+│              Next.js Frontend                     │
+│  Landing (/) │ Create (/create) │ Analyze (/analyze) │
+└──────┬──────────────┬────────────────┬───────────┘
+       │              │                │
+       │  WebSocket   │   REST API     │
+       │  (voice)     │   (upload)     │
+       ▼              ▼                ▼
+┌──────────────────────────────────────────────────┐
+│    Google Cloud Run — FastAPI Backend             │
+│                                                   │
+│  ┌───────────────┐ ┌──────────┐ ┌──────────────┐ │
+│  │  WebSocket    │ │ REST API │ │  Contract    │ │
+│  │  Handler      │ │          │ │  Generator   │ │
+│  └───────┬───────┘ └────┬─────┘ └──────┬───────┘ │
+└──────────┼──────────────┼──────────────┼─────────┘
+           │              │              │
+           ▼              ▼              ▼
+   ┌─────────────┐ ┌───────────┐ ┌─────────────┐
+   │ Gemini Live │ │  Gemini   │ │   Cloud     │
+   │    API      │ │ 2.5 Flash │ │  Firestore  │
+   │ (Audio I/O) │ │ (Vision)  │ │ (Storage)   │
+   └─────────────┘ └───────────┘ └─────────────┘
 ```
 
 ### Tech Stack
 
-| Component       | Technology                                                     |
-| --------------- | -------------------------------------------------------------- |
-| **Frontend**    | Next.js 15, TypeScript, Web Audio API, AudioWorklet            |
-| **Backend**     | Python 3.11, FastAPI, WebSockets                               |
-| **Agent**       | Google ADK (Agent Development Kit)                             |
-| **LLM**         | Gemini 2.5 Flash Native Audio (Live API / bidiGenerateContent) |
-| **Auth & Data** | Firebase Admin SDK                                             |
-| **Cloud**       | Google Cloud Run                                               |
-| **Audio**       | PCM 16-bit, 16kHz capture / 24kHz playback                     |
+| Layer               | Technology                           |
+| ------------------- | ------------------------------------ |
+| Frontend            | Next.js 15, React 19, TypeScript     |
+| Backend             | Python 3.11, FastAPI, Uvicorn        |
+| Live Agent          | Google ADK (Agent Development Kit)   |
+| Contract Generation | Google GenAI SDK (standard API)      |
+| Contract Analysis   | Google GenAI SDK (multimodal/vision) |
+| Audio Streaming     | Gemini Live API (native audio)       |
+| Database            | Cloud Firestore                      |
+| Hosting             | Google Cloud Run                     |
+| WebSocket           | FastAPI WebSockets + Gemini Live     |
+
+---
 
 ## 🚀 Quick Start (Local Development)
 
@@ -63,13 +92,14 @@ LegalLease uses **Gemini's Live API** to create a conversational legal partner t
 
 - Python 3.11+
 - Node.js 18+
-- A [Google AI Studio API key](https://aistudio.google.com/apikey)
+- [Google Cloud CLI (`gcloud`)](https://cloud.google.com/sdk/docs/install)
+- A [Gemini API key](https://aistudio.google.com/apikey)
 
-### 1. Clone the repo
+### 1. Clone the Repository
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/legallease-live-agent.git
-cd legallease-live-agent
+git clone https://github.com/YOUR_USERNAME/legallease.git
+cd legallease
 ```
 
 ### 2. Backend Setup
@@ -78,46 +108,57 @@ cd legallease-live-agent
 cd backend
 
 # Create virtual environment
-python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
+python3.11 -m venv venv
+source venv/bin/activate  # macOS/Linux
+# or: venv\Scripts\activate  # Windows
 
 # Install dependencies
 pip install -r requirements.txt
 
 # Configure environment
 cp .env.example .env
-# Edit .env and set your GOOGLE_API_KEY
-
-# Start the server
-bash start-minimal.sh
+# Edit .env and add your GOOGLE_API_KEY
 ```
 
-The backend will be running at `http://localhost:8000`.
+### 3. Firebase Setup (for contract persistence)
 
-### 3. Frontend Setup
-Download The Frontend Repo at [Legal-GoogleADK-Frontend](https://github.com/Clarionxk/Legal-GoogleADK-Frontend)
+1. Go to [Firebase Console](https://console.firebase.google.com/)
+2. Create project → Enable Firestore Database (test mode)
+3. Project Settings → Service Accounts → Generate New Private Key
+4. Save the JSON as `firebase-service-account.json` in the `backend/` folder
+5. Update `.env`:
+   ```
+   FIREBASE_SERVICE_ACCOUNT_KEY=./firebase-service-account.json
+   FIREBASE_PROJECT_ID=your-project-id
+   ```
+
+### 4. Start the Backend
 
 ```bash
-cd frontend
+uvicorn app.main:app --reload --host 0.0.0.0 --port 8000 --loop asyncio
+```
+
+### 5. Frontend Setup
+
+```bash
+cd ../frontend
 
 # Install dependencies
 npm install
 
-# Start the dev server
+# Configure environment
+cp .env.example .env.local
+# Ensure NEXT_PUBLIC_BACKEND_URL=ws://localhost:8000
+
+# Start dev server
 npm run dev
 ```
 
-The frontend will be running at `http://localhost:3000`.
+### 6. Open the App
 
-### 4. Use the App
+Navigate to [http://localhost:3000](http://localhost:3000)
 
-1. Open `http://localhost:3000` in Chrome
-2. Click the **microphone button** 🎤
-3. Allow microphone access when prompted
-4. Start talking! Say something like _"I need a sales contract"_
-5. The agent will ask you clarifying questions
-6. Once confirmed, it generates the contract and displays it in the preview panel
-7. Click **Download** to save as PDF
+---
 
 ## 🧪 Reproducible Testing (For Judges)
 
@@ -180,14 +221,9 @@ The backend is also deployed on Google Cloud Run:
 
 ---
 
-## ☁️ Deploy to Google Cloud Run
+## ☁️ Google Cloud Deployment
 
-### Prerequisites
-
-- [Google Cloud CLI](https://cloud.google.com/sdk/docs/install) installed
-- A GCP project with billing enabled
-
-### Deploy
+### Deploy Backend to Cloud Run
 
 ```bash
 cd backend
@@ -196,78 +232,96 @@ cd backend
 gcloud auth login
 gcloud config set project YOUR_PROJECT_ID
 
-# Enable required APIs
-gcloud services enable run.googleapis.com cloudbuild.googleapis.com
+# Deploy (automated script)
+./deploy.sh
 
-# Set your API key and deploy
-export GOOGLE_API_KEY=your-key-here
-bash deploy-cloudrun.sh
+# Or manually:
+gcloud builds submit --tag gcr.io/YOUR_PROJECT_ID/legallease-backend
+gcloud run deploy legallease-backend \
+  --image gcr.io/YOUR_PROJECT_ID/legallease-backend \
+  --platform managed \
+  --region us-central1 \
+  --allow-unauthenticated \
+  --memory 1Gi \
+  --timeout 300 \
+  --session-affinity
 ```
 
-The deployment script will output your Cloud Run URL. Update the frontend's `NEXT_PUBLIC_BACKEND_URL` environment variable to point to it:
+### Deploy Frontend to Vercel (or Cloud Run)
 
 ```bash
-# In the frontend directory
-echo "NEXT_PUBLIC_BACKEND_URL=wss://your-service-url.run.app" > .env.local
+cd frontend
+
+# Update .env with Cloud Run backend URL
+echo "NEXT_PUBLIC_BACKEND_URL=wss://legallease-backend-XXXXX.run.app" > .env.production
+
+# Deploy to Vercel
+npx vercel --prod
 ```
 
-## 📂 Project Structure
+---
+
+## 📁 Project Structure
 
 ```
-legallease-live-agent/
+legallease/
 ├── backend/
 │   ├── app/
-│   │   ├── main.py              # FastAPI app entry point
-│   │   ├── config.py            # Pydantic settings
 │   │   ├── api/routes/
-│   │   │   ├── live_agent.py    # WebSocket endpoint (ADK ↔ browser)
-│   │   │   ├── auth.py          # Firebase auth routes
-│   │   │   └── contracts.py     # Contract CRUD (Firestore)
+│   │   │   ├── live_agent.py      # WebSocket handler for voice agent
+│   │   │   ├── analyze.py         # Contract analysis endpoint
+│   │   │   ├── contracts.py       # Contract CRUD + Firestore
+│   │   │   └── auth.py            # Authentication routes
 │   │   ├── services/
-│   │   │   ├── agent.py         # ADK Agent definition + instructions
-│   │   │   └── contract_tools.py # Contract types & categories
-│   │   └── utils/
-│   │       └── security.py      # Firebase token verification
-│   ├── Dockerfile               # Cloud Run container
-│   ├── deploy-cloudrun.sh       # One-click deployment script
-│   ├── requirements.txt
-│   └── start-minimal.sh         # Local dev startup
+│   │   │   ├── agent.py           # ADK agent definition + instructions
+│   │   │   ├── contract_generator.py  # Contract text generation
+│   │   │   └── firebase.py        # Firestore client
+│   │   ├── config.py              # App configuration
+│   │   └── main.py                # FastAPI application
+│   ├── Dockerfile
+│   ├── deploy.sh                  # Cloud Run deployment script
+│   └── requirements.txt
 ├── frontend/
 │   ├── app/
-│   │   ├── hooks/
-│   │   │   └── useLiveAgent.ts  # React hook (WebSocket + audio)
-│   │   ├── components/
-│   │   │   ├── LiveLegalPartner.tsx      # Main UI component
-│   │   │   └── LiveLegalPartner.module.css
-│   │   ├── globals.css          # Design system
-│   │   ├── layout.tsx
-│   │   └── page.tsx
-│   └── public/
-│       └── pcm-capture-processor.js  # AudioWorklet for mic capture
-└── README.md
+│   │   ├── page.tsx               # Landing page
+│   │   ├── create/page.tsx        # Voice agent page
+│   │   ├── analyze/page.tsx       # Contract analyzer page
+│   │   ├── hooks/useLiveAgent.ts  # WebSocket + audio hook
+│   │   └── components/
+│   │       └── LiveLegalPartner.tsx
+│   └── package.json
+└── architecture-diagram.png
 ```
 
+---
 
-## 📜 Available Contract Types
+## 🔑 Google Cloud Services Used
 
-**Business:** Sales Agreement, Service Agreement, NDA, Partnership, Joint Venture, Franchise, Distribution, Supply, License, Employment, Consulting, Non-Compete, Independent Contractor, Manufacturing
+1. **Google Cloud Run** — Hosts the FastAPI backend
+2. **Cloud Firestore** — Stores generated contracts
+3. **Gemini Live API** — Real-time audio streaming for voice conversation
+4. **Gemini 2.5 Flash** — Contract generation and document analysis (vision)
+5. **Cloud Build** — Container image building
 
-**Real Estate:** Lease, Purchase, Mortgage, Tenancy, Property Management, Commercial Lease
+---
 
-**Financial:** Loan Agreement, Investment Agreement, Promissory Note, Guaranty, Credit
+## 🏆 Hackathon Category
 
-**Employment:** Offer Letter, Employee Handbook, Severance, Termination
+**Live Agents 🗣️** — Real-time Interaction (Audio/Vision)
 
-**IP:** Copyright Assignment, Patent License, Trademark License, Confidentiality
+LegalLease is an agent that users can talk to naturally, with full interruption support. It uses:
 
-**Personal:** Prenuptial, Postnuptial, Separation, Settlement, Child Custody, Power of Attorney, Living Will
+- ✅ **Gemini Live API** for bidirectional audio streaming
+- ✅ **Google ADK** (Agent Development Kit) for agent orchestration
+- ✅ **Google Cloud** for hosting (Cloud Run + Firestore)
+- ✅ **Multimodal I/O** — voice input/output + document vision analysis
 
-**Technology:** Software License, IT Services, Website Development
+---
 
-## ⚠️ Disclaimer
+## 📝 License
 
-LegalLease generates **template contracts** for educational and informational purposes. All generated documents should be reviewed by a qualified attorney before signing. This tool does not constitute legal advice.
+This project was built for the Gemini Live Agent Challenge hackathon.
 
-## 📄 License
+---
 
-MIT
+_Built with ❤️ using Google Gemini, ADK, and Cloud Run_
